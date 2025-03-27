@@ -43,80 +43,67 @@
 // We have to find the sum of all such prime numbers, not their count.
 
 #include <iostream>
+#include <vector>
+#include <cmath>
 #include <set>
+#include <string>
+#include <algorithm> // Include this header for std::rotate
 
-int main()
-{
-  // highest number (1000000 in original problem)
-  unsigned int n;
-  std::cin >> n;
+// Function to generate all primes up to n using Sieve of Eratosthenes
+std::set<unsigned int> generatePrimes(unsigned int n) {
+    std::vector<bool> isPrime(n + 1, true);
+    isPrime[0] = isPrime[1] = false;
 
-  // precomputation: find all prime numbers up to n
-  std::set<unsigned int> primes;
-  primes.insert(2);
-  for (unsigned int i = 3; i <= n; i += 2)
-  {
-    bool isPrime = true;
-
-    // test against all prime numbers we have so far (in ascending order)
-    for (auto x : primes)
-    {
-      // divisible => not prime
-      if (i % x == 0)
-      {
-        isPrime = false;
-        break;
-      }
-
-      // prime is too large to be a divisor
-      if (x*x > i)
-        break;
+    for (unsigned int i = 2; i * i <= n; i++) {
+        if (isPrime[i]) {
+            for (unsigned int j = i * i; j <= n; j += i) {
+                isPrime[j] = false;
+            }
+        }
     }
 
-    // yes, we have a prime
-    if (isPrime)
-      primes.insert(i);
-  }
+    std::set<unsigned int> primes;
+    for (unsigned int i = 2; i <= n; i++) {
+        if (isPrime[i]) {
+            primes.insert(i);
+        }
+    }
+    return primes;
+}
 
-  // now look at all primes
-  unsigned int sum = 0;
-  for (auto x : primes)
-  {
-    // move the right-most digit to the front of the number
-    // we need to know the "position" of the front-most digit:
-    // shift will be   1 for x =   1..9
-    // shift will be  10 for x =  10..99
-    // shift will be 100 for x = 100..999 and so on
-    unsigned int shift = 1;
-    while (x > shift * 10)
-      shift *= 10;
+// Function to check if all rotations of a number are prime
+bool isCircularPrime(unsigned int num, const std::set<unsigned int>& primes) {
+    std::string s = std::to_string(num);
+    unsigned int len = s.length();
 
-    auto rotated = x;
-    do
-    {
-      // take right-most digit
-      auto digit = rotated % 10;
-      // remove it
-      rotated /= 10;
-      // and prepend it
-      rotated += digit * shift;
+    for (unsigned int i = 0; i < len; i++) {
+        std::rotate(s.begin(), s.begin() + 1, s.end()); // Rotate the digits
+        if (primes.find(std::stoi(s)) == primes.end()) {
+            return false; // Rotation is not prime
+        }
+    }
+    return true;
+}
 
-      // rotated number not prime ?
-      if (primes.count(rotated) == 0)
-        break;
-    } while (rotated != x); // finished the circle ? (we have the initial number again)
+int main() {
+    // Read the upper limit
+    unsigned int n;
+    std::cin >> n;
 
-    // all rotations succeeded ?
-#define ORIGINAL
-#ifdef ORIGINAL
-    if (rotated == x)
-      sum++;
-#else
-    if (rotated == x)
-      sum += x;
-#endif
-  }
+    // Generate primes up to n
+    std::set<unsigned int> primes = generatePrimes(n);
 
-  std::cout << sum << std::endl;
-  return 0;
+    unsigned int sum = 0;
+
+    // Check for circular primes
+    for (auto prime : primes) {
+        if (isCircularPrime(prime, primes)) {
+            sum += prime;
+        }
+    }
+
+    // Output the sum of circular primes
+    std::cout << sum << std::endl;
+
+    return 0;
 }
