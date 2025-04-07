@@ -68,81 +68,75 @@
 #include <iostream>
 #include <cmath>
 
-const int NoTriangle = 0;
-// return triangle index or -1 if not a triangle number
+const int NotTriangle = -1;
+
+// Return triangle index or -1 if not a triangle number
 int getTriangle(unsigned long long x)
 {
-  unsigned long long n = sqrt(2*x);
+    // Solve n(n+1)/2 = x => n^2 + n - 2x = 0
+    // Discriminant D = 1 + 8x
+    unsigned long long d = 1 + 8 * x;
+    unsigned long long sqrtD = static_cast<unsigned long long>(std::sqrt(d));
 
-  // if n it truely the right answer then t(n) = x
-  unsigned long long check = n * (n + 1) / 2;
-  if (x == check)
-    return n;
-  else
-    return NoTriangle;
+    if (sqrtD * sqrtD != d)
+        return NotTriangle;
+
+    if ((-1 + sqrtD) % 2 != 0)
+        return NotTriangle;
+
+    return static_cast<int>((-1 + sqrtD) / 2);
 }
 
-// read a single word from STDIN, syntax: "abc","def","xyz"
+// Read a single word from STDIN, syntax: "ABC","DEF",...
 std::string readWord()
 {
-  std::string result;
-  while (true)
-  {
-    // read one character
-    char c = std::cin.get();
-    // no more input ?
-    if (!std::cin)
-      break;
+    std::string result;
+    while (true)
+    {
+        char c = std::cin.get();
+        if (!std::cin)
+            break;
 
-    // ignore quotes
-    if (c == '"')
-      continue;
-    // finish when a comma appears
-    if (c == ',')
-      break;
+        if (c == '"')
+            continue;
+        if (c == ',')
+            break;
 
-    // nope, just an ordinary letter (no further checks whether c in 'A'..'Z')
-    result += c;
-  }
-  return result;
+        result += c;
+    }
+    return result;
 }
 
 int main()
 {
 //#define ORIGINAL
 #ifdef ORIGINAL
+    unsigned int triangleWords = 0;
+    while (true)
+    {
+        std::string word = readWord();
+        if (word.empty())
+            break;
 
-  unsigned int triangleWords = 0;
-  while (true)
-  {
-    // read next word
-    auto word = readWord();
-    if (word.empty())
-      break;
+        unsigned int sum = 0;
+        for (char c : word)
+            sum += c - 'A' + 1;
 
-    unsigned int sum = 0;
-    // A = 1, B = 2, ...
-    for (auto c : word)
-      sum += c - 'A' + 1; // all words contain only uppercase letters without spaces or other characters
-
-    // another "triangle word" ?
-    if (getTriangle(sum) != NoTriangle)
-      triangleWords++;
-  }
-  std::cout << triangleWords << std::endl;
+        if (getTriangle(sum) != NotTriangle)
+            triangleWords++;
+    }
+    std::cout << triangleWords << std::endl;
 
 #else
-
-  unsigned int tests;
-  std::cin >> tests;
-  while (tests--)
-  {
-    // all work is done in getTriangle()
-    unsigned long long x;
-    std::cin >> x;
-    std::cout << getTriangle(x) << std::endl;
-  }
+    unsigned int tests;
+    std::cin >> tests;
+    while (tests--)
+    {
+        unsigned long long x;
+        std::cin >> x;
+        std::cout << getTriangle(x) << std::endl;
+    }
 #endif
 
-  return 0;
+    return 0;
 }
